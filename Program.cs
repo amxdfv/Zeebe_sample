@@ -7,6 +7,12 @@ namespace Client.Cloud.Example
 {
     public class Program
     {
+
+        // TODO придумать бизнесу-логику и прикрутить БД
+        // Сделать логи
+        // Написать readme 
+        // Убери соединение в конфиг
+        // Создать модель для сущностей + вынести каждый воркер в отдельный поток
         public static async Task Main(string[] args)
         {
             var zeebeClient =
@@ -19,12 +25,23 @@ namespace Client.Cloud.Example
 
             var signal = new EventWaitHandle(false, EventResetMode.AutoReset);
 
-           var oslicWorker =  zeebeClient.NewWorker().
-                JobType("call-shit").
+           var userWorker =  zeebeClient.NewWorker().
+                JobType("Check_User").
+                Handler((client, job) =>
+                {
+                    client.NewCompleteJobCommand(job.Key).Variables("{\"UserExists\":true}}").Send();
+                }).
+                MaxJobsActive(5).
+                Timeout(TimeSpan.FromSeconds(10)).
+                PollInterval(TimeSpan.FromSeconds(5))
+
+                .Name("suslik").Open();
+
+            var flightWorker = zeebeClient.NewWorker().
+                JobType("check_schedule").
                 Handler((client, job) =>
                 {
                     client.NewCompleteJobCommand(job.Key).Send();
-                    Console.WriteLine("sampel_text");
                 }).
                 MaxJobsActive(5).
                 Timeout(TimeSpan.FromSeconds(10)).
@@ -34,11 +51,6 @@ namespace Client.Cloud.Example
 
             signal.WaitOne();
 
-           // zeebeClient.JobHandler();
-
-       //     var topology = await zeebeClient.TopologyRequest().Send();
-
-         //  Console.WriteLine("Hello: " + topology);
         }
     }
 }
