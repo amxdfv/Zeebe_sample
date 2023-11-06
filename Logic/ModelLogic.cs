@@ -13,9 +13,16 @@ namespace Zeebe_sample.Logic
     {
         public override void BusinessLogic(Zeebe.Client.Api.Worker.IJobClient client, Zeebe.Client.Api.Responses.IJob job)
         {
+            bool UserExists = false;
             JObject inputVariables = JObject.Parse(job.Variables);
             string id =  inputVariables.GetValue("user_id").ToString().Replace("\"", "");
-            bool UserExists = DatabaseLogic.CheckUser(id);
+            try
+            {
+                UserExists = DatabaseLogic.CheckUser(id);
+            } catch (Exception ex)
+            {
+                client.NewThrowErrorCommand(job.Key).ErrorCode("unknown_error").ErrorMessage("Непредвиденная ошибка "+ex.Message).Send();
+            }
 
             if (UserExists == true)
             {
@@ -37,17 +44,23 @@ namespace Zeebe_sample.Logic
         public override void BusinessLogic(Zeebe.Client.Api.Worker.IJobClient client, Zeebe.Client.Api.Responses.IJob job)
         {
             JObject inputVariables = JObject.Parse(job.Variables);
-            string data =  inputVariables.GetValue("date").ToString();
-            DateTime parsedDate = DateTime.Parse(data);
-            if (parsedDate < DateTime.Now.AddDays(1))
+            try
             {
-                client.NewThrowErrorCommand(job.Key).ErrorCode("date_too_early").ErrorMessage("Слишком ранняя дата").Send();
-                return;
+                string data = inputVariables.GetValue("date").ToString();
+                DateTime parsedDate = DateTime.Parse(data);
+                if (parsedDate < DateTime.Now.AddDays(1))
+                {
+                    client.NewThrowErrorCommand(job.Key).ErrorCode("date_too_early").ErrorMessage("Слишком ранняя дата").Send();
+                    return;
+                }
+                Day = (int)parsedDate.DayOfWeek;
+                City = inputVariables.GetValue("FlightCity").ToString();
+                Price = DatabaseLogic.CheckFlight(City, Day);
+                inputVariables.Add("Price", Price);
+            } catch (Exception ex)
+            {
+                client.NewThrowErrorCommand(job.Key).ErrorCode("unknown_error").ErrorMessage("Непредвиденная ошибка " + ex.Message).Send();
             }
-            Day =  (int) parsedDate.DayOfWeek;
-            City = inputVariables.GetValue("FlightCity").ToString();
-            Price = DatabaseLogic.CheckFlight(City, Day);
-            inputVariables.Add("Price", Price);
 
             if (Price is null)
             {
@@ -66,7 +79,17 @@ namespace Zeebe_sample.Logic
         public override void BusinessLogic(Zeebe.Client.Api.Worker.IJobClient client, Zeebe.Client.Api.Responses.IJob job)
         {
             JObject inputVariables = JObject.Parse(job.Variables);
-            if (DatabaseLogic.CheckAccount(inputVariables.GetValue("user_id").ToString(), inputVariables.GetValue("Price").ToString()) == true)
+            bool Permission = false;
+            try
+            {
+                Permission = DatabaseLogic.CheckAccount(inputVariables.GetValue("user_id").ToString(), inputVariables.GetValue("Price").ToString());
+            }
+            catch (Exception ex)
+            {
+                client.NewThrowErrorCommand(job.Key).ErrorCode("unknown_error").ErrorMessage("Непредвиденная ошибка " + ex.Message).Send();
+            }
+
+            if (Permission == true)
             {
                 client.NewCompleteJobCommand(job.Key).Variables(inputVariables.ToString()).Send();
             } else

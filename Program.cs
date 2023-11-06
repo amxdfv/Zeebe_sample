@@ -10,18 +10,20 @@ namespace Client.Cloud.Example
     public class Program
     {
 
-        // TODO придумать бизнесу-логику и прикрутить БД
+        // TODO 
         // Сделать логи
         // Написать readme 
-        // Убери соединение в конфиг
-        // Создать модель для сущностей + вынести каждый воркер в отдельный поток
+       
         public static async Task Main(string[] args)
         {
+            ConfigLogic Cl = new ConfigLogic();
+            Cl.ReadConfig();
+
             var zeebeClient =
                     CamundaCloudClientBuilder.Builder()
-                        .UseClientId("KbICvgh5X_O-7jfc8~jdnAIVF675aTy3")
-                        .UseClientSecret("QI9hNIDKp3EjG-c-TRAMYsapcRWD-i.SO2.gcBdFysQ.QosCNNIpTjQBComOSdiI")
-                        .UseContactPoint("d21832ea-056f-4c99-89e6-f4c93f6e9fc4.syd-1.zeebe.camunda.io")
+                        .UseClientId(Cl.client_id)
+                        .UseClientSecret(Cl.client_secret)
+                        .UseContactPoint(Cl.contact_point)
             //  .UseLoggerFactory(new NLogLoggerFactory()) // optional
                     .Build();
 

@@ -11,28 +11,28 @@ namespace Zeebe_sample.Logic
 
         public static bool CheckUser(string id)
         {
-            var UserExists = false;
-            var connection = DatabaseLogic.GetDBConnection();
-            connection.Open();
-            var command = connection.CreateCommand();
-            command.CommandText =
-            @"
+                var UserExists = false;
+                var connection = DatabaseLogic.GetDBConnection();
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText =
+                @"
             SELECT name
             FROM users
             WHERE id = $id
             ";
-            command.Parameters.AddWithValue("$id", id);
-            using (var reader = command.ExecuteReader())
-            {
-                UserExists = reader.HasRows;
-               /* while (reader.Read())                  // может потом тут будет еще логика
+                command.Parameters.AddWithValue("$id", id);
+                using (var reader = command.ExecuteReader())
                 {
-                    var name = reader.GetString(0);
-                } */
-               reader.Close();
-            }
-            connection.Close();
-            return UserExists;
+                    UserExists = reader.HasRows;
+                    /* while (reader.Read())                  // может потом тут будет еще логика
+                     {
+                         var name = reader.GetString(0);
+                     } */
+                      reader.Close();
+                }
+                connection.Close();
+                return UserExists;
         }
 
         public static string? CheckFlight(string city, int? date)
