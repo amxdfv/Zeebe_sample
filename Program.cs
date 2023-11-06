@@ -25,7 +25,6 @@ namespace Client.Cloud.Example
             //  .UseLoggerFactory(new NLogLoggerFactory()) // optional
                     .Build();
 
-
             Thread userTread = new Thread(delegate ()
             {
                 UserLogic US = new UserLogic();
@@ -44,40 +43,10 @@ namespace Client.Cloud.Example
                 WorkerLogic.BusinessWorker(zeebeClient, "Check_Payment", PM);
             });
 
-
             userTread.Start();
             flightTread.Start();
             paymentTread.Start();
 
-/*            var signal = new EventWaitHandle(false, EventResetMode.AutoReset);
-
-           var userWorker =  zeebeClient.NewWorker().
-                JobType("Check_User").
-                Handler((client, job) =>
-                {
-                    client.NewCompleteJobCommand(job.Key).Variables("{\"UserExists\":true}}").Send();
-                }).
-                MaxJobsActive(5).
-                Timeout(TimeSpan.FromSeconds(10)).
-                PollInterval(TimeSpan.FromSeconds(5))
-
-                .Name("suslik").Open();
-
-
-            var flightWorker = zeebeClient.NewWorker().
-                JobType("check_schedule").
-                Handler((client, job) =>
-                {
-                    client.NewCompleteJobCommand(job.Key).Send();
-                }).
-                MaxJobsActive(5).
-                Timeout(TimeSpan.FromSeconds(10)).
-                PollInterval(TimeSpan.FromSeconds(5))
-
-                .Name("suslik").Open();
-
-            signal.WaitOne();
-*/
         }
     }
 }
